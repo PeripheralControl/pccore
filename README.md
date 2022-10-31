@@ -1,0 +1,2 @@
+# pccore
+Verilog peripherals
