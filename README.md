@@ -18,7 +18,6 @@ https://demandperipherals.com/support/build_fpga.html.
  - [**System  Architecture**](#arch)<br>
  - [**How to Build the Peripheral Control Project**](#build)<br>
    - [**Supported FPGA Boards**](#boards)<br>
-   - [**Tool Chain Installation**](#toolchain)<br>
    - [**Make, Download, and Test**](#maketest)<br>
  - [**How to Write a New Peripheral**](#newperi)<br>
    - [**The Peripheral Control Wishbone bus**](#wish)<br>
@@ -90,14 +89,6 @@ supported FPGA board.
     https://www.ebay.com/itm/325278731641))<br>
 
 <img src=fpgaboards/axelxo2/MachXO2.png width=150> <img src=fpgaboards/baseboard4/bb4.jpg width=150> <img src=fpgaboards/basys3/Basys-3.png width=150> <img src=fpgaboards/runber/runber.png width=150> <img src=fpgaboards/stepxo2/stepxo2.jpg width=150> <img src=fpgaboards/tang4k/tang4k.png width=150>
-
-<span id="toolchain"></span>
-### Tool Chain Installation
- (in progress)
-
-<span id="maketest"></span>
-### Make, Download, and Test
- (in progress)
 
 <br>
 <br>
