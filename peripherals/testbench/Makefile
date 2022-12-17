@@ -27,9 +27,13 @@
 # Makefile to run Verilog tests for some of the peripherals
 
 
-default: mainbb4io_tb.xt2
+default: rcc8_tb.xt2
 
 all: 
+
+rcc8_tb.xt2: rcc8_tb.v ../rcc8.v
+	iverilog -o rcc8_tb.vvp ../sysdefs.h rcc8_tb.v ../rcc8.v
+	vvp rcc8_tb.vvp -lxt2
 
 mainbb4io_tb.xt2: ../boardperi.v ../main.v
 	iverilog -o mainbb4io_tb.vvp ../brddefs.h ../sysdefs.h mainbb4io_tb.v ../main.v \
