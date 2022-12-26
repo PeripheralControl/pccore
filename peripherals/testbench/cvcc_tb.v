@@ -64,9 +64,9 @@ module cvcc_tb;
 
     // Add the device under test
     cvcc cvcc_dut(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
-    assign pins[1] = vin;
-    assign pins[2] = iin;
-    assign pins[3] = refin;
+    assign pins[1] = refin;
+    assign pins[2] = vin;
+    assign pins[3] = iin;
 
     // generate the clock(s)
     initial  CLK_I = 1;
@@ -96,9 +96,9 @@ module cvcc_tb;
 
         //  - Set V/I output values to 0
         #500;
-        #50; WE_I = 1; TGA_I = 1; STB_I = 1; ADR_I = 6; DAT_I = 8'h00;
+        #50; WE_I = 1; TGA_I = 1; STB_I = 1; ADR_I = 6; DAT_I = 8'h02;
         #50; WE_I = 0; TGA_I = 0; STB_I = 0; ADR_I = 0; DAT_I = 0;
-        #50; WE_I = 1; TGA_I = 1; STB_I = 1; ADR_I = 7; DAT_I = 8'h80;
+        #50; WE_I = 1; TGA_I = 1; STB_I = 1; ADR_I = 7; DAT_I = 8'h00;
         #50; WE_I = 0; TGA_I = 0; STB_I = 0; ADR_I = 0; DAT_I = 0;
         #50; WE_I = 1; TGA_I = 1; STB_I = 1; ADR_I = 8; DAT_I = 8'h03;  // very high I max
         #50; WE_I = 0; TGA_I = 0; STB_I = 0; ADR_I = 0; DAT_I = 0;
@@ -107,8 +107,8 @@ module cvcc_tb;
         #50; WE_I = 1; TGA_I = 1; STB_I = 1; ADR_I = 10; DAT_I = 1;
         #50; WE_I = 0; TGA_I = 0; STB_I = 0; ADR_I = 0; DAT_I = 0;
 
-        // Each cycle is about 10us long.  Report to the host every 100 cycles.
-        for (i = 0; i < 3500 ; i = i+1)
+        // Each cycle is about 10us long.  Report to the host every 1000 cycles.
+        for (i = 0; i < 1000 ; i = i+1)
         begin
             #2000
             vin = 0; iin = 0; refin = 0;
@@ -121,7 +121,40 @@ module cvcc_tb;
             #2000
             vin = 0; iin = 0; refin = 0;
         end
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 0; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 1; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 2; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 3; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 4; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 5; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 6; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 7; DAT_I = 8'h00;
 
+        // Each cycle is about 10us long.  Report to the host every 1000 cycles.
+        for (i = 0; i < 1000 ; i = i+1)
+        begin
+            #2000
+            vin = 0; iin = 0; refin = 0;
+            #2000
+            vin = 1; iin = 0; refin = 0;
+            #2000
+            vin = 1; iin = 1; refin = 1;
+            #2000
+            vin = 1; iin = 0; refin = 0;
+            #2000
+            vin = 0; iin = 0; refin = 0;
+        end
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 0; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 1; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 2; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 3; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 4; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 5; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 6; DAT_I = 8'h00;
+        #50; WE_I = 0; TGA_I = 1; STB_I = 1; ADR_I = 7; DAT_I = 8'h00;
+
+
+        #1000;
         $finish;
     end
 endmodule
