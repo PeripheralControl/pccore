@@ -34,8 +34,8 @@
 //  Tonegen is a simple, square-wave tone generator that has fairly good
 //  frequency control and fairly good volume control.
 //
-//  It uses a 24 phase accumulator that runs at 100 KHz and has a frequency
-//  accuracy of one part in about ten thousand.  
+//  It uses a 24 bit phase accumulator that runs at 100 KHz and has a
+//  frequency accuracy of one part in about ten thousand.  
 //  It can control the duration of a note in milliseconds with a minimum of
 //  1 millisecond and a maximum of 4095.
 //  It controls volumn by PWM controlling each of its four output lines.
@@ -46,8 +46,8 @@
 //      0:  duration in milliseconds, low byte
 //      1:  duration in milliseconds, high 4 bits
 //      2:  low byte of 24 bit phase offset
-//      3:  mid byte of 24 bit phase offset0 MHz
-//      4:  high byte of 24 bit phase offset MHz
+//      3:  mid byte of 24 bit phase offset
+//      4:  high byte of 24 bit phase offset
 //      5:  low 4 bits are PWM for LSB output, upper 4 bits control pin1
 //      6:  high 4 bits are PWM for MSB output, lower 4 bits control pin2
 //
