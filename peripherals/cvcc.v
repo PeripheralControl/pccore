@@ -32,26 +32,24 @@
 //  File: cvcc.v;   CVCC buck regulator controller
 //
 // Hardware Registers:
-//   0,1:   vlin    - Load voltage (high,low)
-//   2,3:   ilin    - Load current
-//   4,5:   vref    - PWM width of Vref
-//   6,7    per     - Period of Vref in units of 10 ns
+//   0,1:   vld     - Load voltage (high,low)
+//   2,3:   ild     - Load current
+//   4,5:           -
+//   6,7    per     - Period of vld in units of 10 ns
 //   8,9:   vset    - Maximum voltage to the load
 //   10,11: iset    - Maximum current to the load
 //   12:            - Enable
 //
 // Pins:
 //   1  -- PWM output to control the FET
-//   2  -- PWM input of 2.7 volt reference
+//   2  -- 
 //   3  -- PWM input of load current
 //   4  -- PWM input of load voltage
 //
 // INTRODUCTION:
 //  This peripheral controls a cvcc buck regulator circuit.  The
-//  circuit measures the load voltage, load current, and a reference
-//  PWM pulse corresponding to 2.7 volts.
-//  The 2.7 volt reference defines the period of the PWM control to
-//  the FET. 
+//  circuit measures the load voltage and load current as a pulse width.
+//  The period of the Vload signal is also reported to the host
 //
 /////////////////////////////////////////////////////////////////////////
 module cvcc(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
@@ -65,49 +63,45 @@ module cvcc(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
     input  [7:0] DAT_I;      // Data INto the peripheral;
     output [7:0] DAT_O;      // Data OUTput from the peripheral, = DAT_I if not us.
     input  [`MXCLK:0] clocks; // Array of clock pulses from 10ns to 1 second
-    inout  [3:0] pins;       // Simple Bidirectional I/O 
+    inout  [3:0] pins;       // a PWM controlled SMPS
  
     wire   myaddr;           // ==1 if a correct read/write on our address
-    reg    [9:0] vout;       // Output Voltage
-    reg    [9:0] iout;       // Output Current
-    reg    [15:0] vin;       // Load voltage
-    reg    [15:0] iin;       // Load current
-    reg    [15:0] ref;       // Measured positive PWM time for the voltage reference
+    reg    [9:0] vset;       // Output Voltage
+    reg    [9:0] iset;       // Output Current
+    reg    [15:0] vld;       // Load voltage
+    reg    [15:0] ild;       // Load current
     reg    [15:0] per;       // Measurement period
     reg    enabled;          // == 1 to enable FET and data up to the host
     reg    marked;           // ==1 if we need to send an auto-update to the host
-    reg    [9:0] debcount;   // 2.7 ref input at debval for this many 10ns clocks
-    reg    [9:0] vincount;   // PWM counter for Vin
-    reg    [9:0] iincount;   // PWM counter for Iin
-    reg    [9:0] refcount;   // Positive PWM counter for Vref
-    reg    [9:0] percount;   // count of 100ns pulses in period of vref
+    reg    [9:0] debcount;   // Debounce Vload input with this counter
+    reg    [9:0] vldcount;   // PWM counter for Vin
+    reg    [9:0] ildcount;   // PWM counter for Iin
+    reg    [9:0] percount;   // count of 100ns pulses in period of vload
     reg    pinFET;           // Pin 1 with PWM of FET to control Vout
-    reg    pinVin;           // Pin 2 with PWM of load voltage
-    reg    pinIin;           // Pin 3 with PWM of load current
-    reg    pinVref;          // Pin 4 with PWM of 2.7 volt reference
-reg    [9:0] pwmtestcount;// drive the FET with a straight PWM for testing
+    reg    pinVld;           // Pin 2 with PWM of load voltage
+    reg    pinIld;           // Pin 3 with PWM of load current
+    reg    [9:0] pwmcount;   // drive the FET with a straight PWM 
+    reg    [9:0] fetpwm;     // FET output is high if this is less than pwmcount
 
 
     initial
     begin
         pinFET = 0;
-        pinVref = 0;
-        pinIin = 0;
-        pinVin = 0;
-        vout = 0;
-        iout = 0;
+        pinIld = 0;
+        pinVld = 0;
+        vset = 0;
+        iset = 0;
         enabled = 0;
         marked = 0;
         debcount = 0;
-        vincount = 0;
-        iincount = 0;
-        refcount = 0;
+        vldcount = 0;
+        ildcount = 0;
         percount = 0;
-        vin = 0;
-        iin = 0;
-        ref = 0;
+        vld = 0;
+        ild = 0;
         per = 0;
-pwmtestcount = 0;
+        pwmcount = 0;
+        fetpwm = 0;
     end
 
     always @(posedge CLK_I)
@@ -115,89 +109,83 @@ pwmtestcount = 0;
         if (TGA_I & myaddr & WE_I)  // latch data on a write
         begin
             if (ADR_I[3:0] == 8)                 // high bits V out
-                vout[9:8] <= DAT_I[1:0];
+                fetpwm[15:8] <= DAT_I[7:0];
             if (ADR_I[3:0] == 9)                 // low bits V out
-                vout[7:0]  <= DAT_I[7:0];
+                fetpwm[7:0]  <= DAT_I[7:0];
             if (ADR_I[3:0] == 10)                // high bits I out
-                iout[9:8] <= DAT_I[1:0];
+                iset[9:8] <= DAT_I[1:0];
             if (ADR_I[3:0] == 11)                // low bits I out
-                iout[7:0]  <= DAT_I[7:0];
+                iset[7:0]  <= DAT_I[7:0];
             if (ADR_I[3:0] == 12)                // low bits I out
                 enabled    <= DAT_I[0];          // enable flag
         end
         else if (TGA_I & myaddr & ~WE_I)  // clear marked register on any read
             marked <= 0;
-        else if (clocks[`M100CLK])               // send to host every 100ms
-            marked <= enabled;
+        else if (clocks[`M10CLK])               // send to host every 10ms
+            marked <= 1'b1;
+            //marked <= enabled;
     end
 
     always @(posedge clocks[`N10CLK])
     begin
         // Capture input pins
-        pinVref <= pins[1];
-        pinIin <=  pins[2];
-        pinVin <=  pins[3];
+        pinIld <=  pins[2];
+        pinVld <=  pins[3];
 
-        // Debounce the Vref line to use it as the PWM period clock
-        if (pinVref == 1'b0)
+        // Debounce the Vld line to use it as the PWM period clock
+        if (pinVld == 1'b0)
         begin
             debcount <= 8'h00;            // reset debounce count
-            vincount <= (pinVin) ? (vincount + 10'h001) : vincount;
-            iincount <= (pinIin) ? (iincount + 10'h001) : iincount;
-            refcount <= (pinVref) ? (refcount + 10'h001) : refcount;
+            ildcount <= (pinIld) ? (ildcount + 10'h001) : ildcount;
             percount <= percount + 10'h1;
         end
         else if (debcount != 8'h08)
         begin
             debcount <= debcount + 8'h01;
-            vincount <= (pinVin) ? (vincount + 10'h001) : vincount;
-            iincount <= (pinIin) ? (iincount + 10'h001) : iincount;
-            refcount <= (pinVref) ? (refcount + 10'h001) : refcount;
+            vldcount <= (pinVld) ? (vldcount + 10'h001) : vldcount;
+            ildcount <= (pinIld) ? (ildcount + 10'h001) : ildcount;
             percount <= percount + 10'h1;
         end
         else
         begin
-            // At this point we have 8 values of 1 for Vref.  We use
+            // At this point we have 8 values of 1 for Vld.  We use
             // this as the leading edge of the period for measuring
             // the PWM inputs.  The counts are cleared and added to
             // the totals to be sent to the host.
             debcount <= debcount + 8'h01;   // to nine and on up
-            vincount <= 10'h000;
-            iincount <= 10'h000;
-            refcount <= 10'h000;
+            vldcount <= 10'h000;
+            ildcount <= 10'h000;
             percount <= 10'h000;
-            iin <= {6'h00,iincount};
-            vin <= {6'h00,vincount};
+
             // Use an IIR to filter the raw values before sending to host
-            iin <= (iin - {4'h0,(iin >> 4)}) + {6'h00,iincount};
-            vin <= (vin - {4'h0,(vin >> 4)}) + {6'h00,vincount};
-            ref <= (ref - {4'h0,(ref >> 4)}) + {6'h00,refcount};
+            ild <= (ild - {4'h0,(ild >> 4)}) + {6'h00,ildcount};
+            vld <= (vld - {4'h0,(vld >> 4)}) + {6'h00,vldcount};
             per <= (per - {4'h0,(per >> 4)}) + {6'h00,percount};
-            // Compute the state of the FET control pin.  For the FET to
-            // be on the system must be enabled and both the load current
-            // and voltage must be below the user defined limits.
-            //pinFET <= enabled && (vincount < vout) && (iincount < iout);
         end
-        // (for now we force pinFET to be just a PWM output slaved 
-        // to Vout.  This is useful for testing
-        pwmtestcount <= pwmtestcount + 10'h001;
-        pinFET <= (vout > pwmtestcount);
+
+        // pinFET is a PWM output tied to Vout.
+        pinFET <= (fetpwm >= pwmcount);
+        pwmcount <= pwmcount + 10'h001;
     end
 
 
     // Assign the outputs.
     assign   pins[0] =  pinFET;
+//assign   pins[4] = pinFET;
+//assign   pins[5] = pwmcount[9];
+//assign   pins[6] = 0;
+//assign   pins[7] = 0;
 
 
     assign myaddr = (STB_I) && (ADR_I[7:4] == 0);
     assign DAT_O = (~myaddr) ? DAT_I : 
-                    (~TGA_I & marked) ? 8'h08 :   // send up 6 bytes if data available
-                     (TGA_I && (ADR_I[2:0] == 0)) ? vin[15:8] :
-                     (TGA_I && (ADR_I[2:0] == 1)) ? vin[7:0] :
-                     (TGA_I && (ADR_I[2:0] == 2)) ? iin[15:8] :
-                     (TGA_I && (ADR_I[2:0] == 3)) ? iin[7:0] :
-                     (TGA_I && (ADR_I[2:0] == 4)) ? ref[15:8] :
-                     (TGA_I && (ADR_I[2:0] == 5)) ? ref[7:0] :
+                    (~TGA_I & marked) ? 8'h08 :   // send up 8 bytes if data available
+                     (TGA_I && (ADR_I[2:0] == 0)) ? vld[15:8] :
+                     (TGA_I && (ADR_I[2:0] == 1)) ? vld[7:0] :
+                     (TGA_I && (ADR_I[2:0] == 2)) ? ild[15:8] :
+                     (TGA_I && (ADR_I[2:0] == 3)) ? ild[7:0] :
+                     (TGA_I && (ADR_I[2:0] == 4)) ? 0 :
+                     (TGA_I && (ADR_I[2:0] == 5)) ? 0 :
                      (TGA_I && (ADR_I[2:0] == 6)) ? per[15:8] :
                      (TGA_I && (ADR_I[2:0] == 7)) ? per[7:0] :
                      8'h00;
