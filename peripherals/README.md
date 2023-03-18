@@ -40,8 +40,8 @@ that are the core of the Peripheral Control project.
   \- \- [DPI Six Digit Display](#lcd6)<br>
   \- **Sensor Interfaces**<br>
   \- \- [Octal SR04 Interface](#sr04)<br>
-  \- \- [Octal Pololu QTR-RC Interface](#qtr8)<br>
-  \- \- [Quad Pololu QTR-RC Interface](#qtr4)<br>
+  \- \- [Octal Resistor Capacitor analog to digital Converter](#rcc8)<br>
+  \- \- [Quad Resistor Capacitor analog to digital Converter](#rcc4)<br>
   \- \- [Quad Parallax PING))) Interface](#ping)<br>
   \- \- [DPI Octal ADC Interface](#adc)<br>
 <br>
