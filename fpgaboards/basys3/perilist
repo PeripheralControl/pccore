@@ -1,9 +1,9 @@
-Copyright 2021, Demand Peripherals, Inc.  All rights reserved.
+Copyright 2023, Demand Peripherals, Inc.  All rights reserved.
 Customer: bob@linuxtoys.org
 License #: Personal Use
 Product name: PCCore
 License accepted: yes
-Date: April 1, 2021
+Date: April 1, 2023
 
 
 basys3
@@ -15,7 +15,7 @@ dpout32
 dproten
 dpio8
 dptif
-
+vgaterm
 
 
 

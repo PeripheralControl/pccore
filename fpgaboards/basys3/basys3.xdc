@@ -103,30 +103,29 @@ set_property -dict { PACKAGE_PIN K3  IOSTANDARD LVCMOS33 } [get_ports {PCPIN[28]
 set_property -dict { PACKAGE_PIN M3  IOSTANDARD LVCMOS33 } [get_ports {PCPIN[29]}]; # Sch name = XA2_N
 set_property -dict { PACKAGE_PIN M1  IOSTANDARD LVCMOS33 } [get_ports {PCPIN[30]}]; # Sch name = XA3_N
 set_property -dict { PACKAGE_PIN N1  IOSTANDARD LVCMOS33 } [get_ports {PCPIN[31]}]; # Sch name = XA4_N
+## VGA Connector
+#  H/V/R/G might allow for a 4 pin VGA peripheral
+set_property -dict { PACKAGE_PIN P19 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[32]}]; # Hsync
+set_property -dict { PACKAGE_PIN R19 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[33]}]; # Vsync
+set_property -dict { PACKAGE_PIN N19 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[34]}]; # vgaRed[3]
+set_property -dict { PACKAGE_PIN D17 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[35]}]; # vgaGreen[3]
+set_property -dict { PACKAGE_PIN J18 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[36]}]; # vgaBlue[3]
+set_property -dict { PACKAGE_PIN J19 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[37]}]; # vgaRed[2]
+set_property -dict { PACKAGE_PIN G17 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[38]}]; # vgaGreen[2]
+set_property -dict { PACKAGE_PIN K18 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[39]}]; # vgaBlue[2]
+#set_property -dict { PACKAGE_PIN H19 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[34]}]; # vgaRed[1]
+#set_property -dict { PACKAGE_PIN H17 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[35]}]; # vgaGreen[1]
+#set_property -dict { PACKAGE_PIN L18 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[36]}]; # vgaBlue[1]
+#set_property -dict { PACKAGE_PIN G19 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[37]}]; # vgaRed[0]
+#set_property -dict { PACKAGE_PIN N18 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[38]}]; # vgaBlue[0]
+#set_property -dict { PACKAGE_PIN J17 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[39]}]; # vgaGreen[0]
+
 
 
 ## Configuration options, can be used for all designs
 set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
 set_property BITSTREAM.CONFIG.CONFIGRATE 33 [current_design]
 set_property CONFIG_MODE SPIx4 [current_design]
-
-
-##VGA Connector
-#set_property -dict { PACKAGE_PIN G19   IOSTANDARD LVCMOS33 } [get_ports {vgaRed[0]}]
-#set_property -dict { PACKAGE_PIN H19   IOSTANDARD LVCMOS33 } [get_ports {vgaRed[1]}]
-#set_property -dict { PACKAGE_PIN J19   IOSTANDARD LVCMOS33 } [get_ports {vgaRed[2]}]
-#set_property -dict { PACKAGE_PIN N19   IOSTANDARD LVCMOS33 } [get_ports {vgaRed[3]}]
-#set_property -dict { PACKAGE_PIN N18   IOSTANDARD LVCMOS33 } [get_ports {vgaBlue[0]}]
-#set_property -dict { PACKAGE_PIN L18   IOSTANDARD LVCMOS33 } [get_ports {vgaBlue[1]}]
-#set_property -dict { PACKAGE_PIN K18   IOSTANDARD LVCMOS33 } [get_ports {vgaBlue[2]}]
-#set_property -dict { PACKAGE_PIN J18   IOSTANDARD LVCMOS33 } [get_ports {vgaBlue[3]}]
-#set_property -dict { PACKAGE_PIN J17   IOSTANDARD LVCMOS33 } [get_ports {vgaGreen[0]}]
-#set_property -dict { PACKAGE_PIN H17   IOSTANDARD LVCMOS33 } [get_ports {vgaGreen[1]}]
-#set_property -dict { PACKAGE_PIN G17   IOSTANDARD LVCMOS33 } [get_ports {vgaGreen[2]}]
-#set_property -dict { PACKAGE_PIN D17   IOSTANDARD LVCMOS33 } [get_ports {vgaGreen[3]}]
-#set_property -dict { PACKAGE_PIN P19   IOSTANDARD LVCMOS33 } [get_ports Hsync]
-#set_property -dict { PACKAGE_PIN R19   IOSTANDARD LVCMOS33 } [get_ports Vsync]
-
 
 
 ##USB HID (PS/2)

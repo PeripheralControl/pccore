@@ -23,7 +23,7 @@
 # PERMISSIONS UNDER THIS AGREEMENT.
 # 
 # *********************************************************
-VIVADO_PATH=/usr/local/vivado/
+VIVADO_PATH=/opt/Xilinx/Vivado/2020.2/
 
 default: build/pccore.bit
 
@@ -43,7 +43,7 @@ build/sources.v: build/main.v
 	echo "\`include \"main.v\""                              >> build/sources.v
 	echo "\`include \"../basys3.v\""                         >> build/sources.v
 	echo "\`include \"../../../peripherals/clocks.v\""       >> build/sources.v
-	echo "\`define BAUD_DEFAULT \`BAUD460800"                >> build/sources.v
+	echo "\`define BAUD_DEFAULT \`BAUD115200"                >> build/sources.v
 	echo "\`include \"../../../peripherals/hostserial.v\""   >> build/sources.v
 	echo "\`include \"../../../peripherals/slip.v\""         >> build/sources.v
 	echo "\`include \"../../../peripherals/crc.v\""          >> build/sources.v

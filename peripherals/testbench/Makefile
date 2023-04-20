@@ -27,9 +27,13 @@
 # Makefile to run Verilog tests for some of the peripherals
 
 
-default: rcc8_tb.xt2
+default: vgaterm_tb.xt2
 
 all: 
+
+vgaterm_tb.xt2: vgaterm_tb.v ../vgaterm.v
+	iverilog -o vgaterm_tb.vvp ../sysdefs.h vgaterm_tb.v ../vgaterm.v ../font437.v
+	vvp vgaterm_tb.vvp -lxt2
 
 rcc8_tb.xt2: rcc8_tb.v ../rcc8.v
 	iverilog -o rcc8_tb.vvp ../sysdefs.h rcc8_tb.v ../rcc8.v

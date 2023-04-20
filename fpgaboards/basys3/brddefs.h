@@ -43,6 +43,6 @@
 `define BRD_DGT_3         51
 `define BRD_MX_IO         (`BRD_DGT_3)
 
-`define NUM_CORE           8   // can address up to NUM_CORE peripherals
-`define MX_PCPIN          31   // 0-31 in groups of 4 or 8
+`define NUM_CORE          10   // can address up to NUM_CORE peripherals
+`define MX_PCPIN          39   // 0-39 but last 8 are tied to the VGA conn!
 
