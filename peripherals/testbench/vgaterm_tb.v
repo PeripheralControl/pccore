@@ -31,6 +31,8 @@
  
 `timescale 1ns/1ns
 
+// For this test you should comment out the reference to font437
+// in vgaterm.v  It is included in the Makefile.
 
 module vgaterm_tb;
     reg    CLK_I;            // system clock

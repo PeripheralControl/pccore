@@ -30,16 +30,32 @@
 
 // *********************************************************
 // DIRECTIONS:
-//    git clone https://github.com/DemandPeripherals/PCCore.git
-//    cd PCCore/src
-//    vi perilist # make sure the first peripheral is 'in4'
-//    cd testbench
+//    git clone https://github.com/peripheralcontrol/pccore.git
+//    cd pccore/fpgaboards/baseboard4
+//    # edit perilist to have bb4io, out4, and in4
+//    vi perilist # make sure the third peripheral is 'in4'
+//    make   # OK if this fails.  We only want build/main.v
+//    cd ../../peripherals/testbench
 //    make mainin4_tb.xt2
-//    gtkwave -a mainin4_tb.gtkw
+//    gtkwave mainin4_tb.xt2
 //
-// This file tests in4 and the 'send on change' feature.
+//
+// This file tests hostserial, in4 and its 'send on change' feature.
 // *********************************************************
 `timescale 1ns/1ns
+
+// These do _not_ correspond to a real baseboard4 which uses hostparallel
+`define BRD_CLOCK         0
+`define BRD_TX            1
+`define BRD_RX            2
+`define BRD_TXLED         3
+`define BRD_RXLED         4
+`define BRD_BTN_0         5
+`define BRD_MX_BTN        7        // buttons are 0 to 2
+`define BRD_LED_0         8                
+`define BRD_MX_LED        15       // LEDs are 0 to 7
+`define BRD_MX_IO         (`BRD_MX_LED)
+`define MX_PCPIN          34       // eight peripherals, pins 0 to 31 + 3 extra pins
 
 
 module mainin4_tb();

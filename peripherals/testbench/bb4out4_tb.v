@@ -30,85 +30,64 @@
 
 // *********************************************************
 // DIRECTIONS:
-//    git clone https://github.com/DemandPeripherals/PCCore.git
-//    cd PCCore/src
-//    vi perilist # make sure the first peripheral is 'out4'
-//    make main.v
-//    cd testbench
-//    make mainout4_tb.xt2
-//    gtkwave -a mainout4_tb.gtkw
+//    git clone https://github.com/peripheralcontrol/pccore.git
+//    cd pccore/fpgaboards/baseboard4
+//    # edit perilist to include only bb4io and out4
+//    vi perilist # make sure the second peripheral is 'out4'
+//    make   # OK if this fails.  We only want build/main.v
+//    cd ../../peripherals/testbench
+//    make bb4out4_tb.xt2
+//    gtkwave -a bb4out4_tb.gtkw
+//
+// This file tests bb4io and the 'send on change' feature.
 // *********************************************************
+`timescale 1ns/1ns
 
 
-module mainout4_tb();
-    localparam PKTSIZE = 10;
-    reg   clk;             // 20 MHZ clock input
-    wire  tx;
-    reg   rx;
-    wire  tx_led;
-    wire  rx_led;
-    wire  err_led;
-    wire  [88:0] pcpin;    // Peripheral pins
+module bb4out4_tb();
+    reg   ck100mhz;                   // 100 MHz clock from PLL or testbench
+    inout  [`BRD_MX_IO:0]  BRDIO;     // Board IO 
+    inout  [`MX_PCPIN:0]   PCPIN;     // Peripheral Controller Pins (for Pmods)
 
-    integer i,j;           // test loop counters
-    reg   [(8 * PKTSIZE)-1:0] pkt; // up to PKTSIZE bytes in the packet
-    
+    reg    [7:0] datin;               // Data from USB to FPGA
+    reg    ifrxf;                     // RX full from FTDI part
+    reg    iftxe;                     // TX empty from FTDI part
+    wire   ifrd;                      // read strobe from FPGA
 
-    PCcore main_dut(clk, tx, rx, tx_led, rx_led, err_led, pcpin);
-
+    pccore main_dut(BRDIO, PCPIN);
+    assign BRDIO[`BRD_CLOCK] = ck100mhz;
+    assign BRDIO[`BRD_RXF_] = ifrxf;
+    assign BRDIO[`BRD_TXE_] = iftxe;
+    assign ifrd = BRDIO[`BRD_RD_];
+    assign BRDIO[`BRD_DATA_7:`BRD_DATA_0] = datin;
 
     // generate the clock(s)
-    initial  clk = 0;
-    always   #25 clk = ~clk;
+    initial  ck100mhz = 0;
+    always   #5 ck100mhz = ~ck100mhz;
 
 
     // Test the device
     initial
     begin
-        $dumpfile ("mainout4_tb.xt2");
-        $dumpvars (0, mainout4_tb);
+        $dumpfile ("bb4out4_tb.xt2");
+        $dumpvars (0, bb4out4_tb);
+        ifrxf = 1;   // active low
+        iftxe = 0;   // active low
 
-        // Idle is nothing in the receive or transmit fifos
-        //  - Set input rxd line to idle state (==1) Tx=pcpin[1]
-        rx = 1;
-        #20000
-
-        // Load the test characters.  Note start bit and stop bits.
-        // This writes two bytes to reg 0 in slot 2
-        pkt[7:0]   = 8'hc0;  // c0  slip end
-        pkt[15:8]  = 8'hc0;  // c0  slip end
-        pkt[23:16] = 8'hf8;  // f8  write, no auto inc
-        pkt[31:24] = 8'he0;  // e0  peri/slot #0
-        pkt[39:32] = 8'h00;  // 00  first reg is 0
-        pkt[47:40] = 8'h01;  // 01  write count is 1
-        pkt[55:48] = 8'h05;  // 05  first data
-        pkt[63:56] = 8'hda;  // da  high crc
-        pkt[71:64] = 8'h05;  // 05  low crc
-        pkt[79:72] = 8'hc0;  // c0  slip end
-
-        #5000  // some time later ...
-        //  - Send pkt on rxd
-        for (i = 0; i <= PKTSIZE; i = i+1) 
-        begin
-            rx = 1'b0;               // start bit
-            // At 115200, each bit is just less than 8.8 microseconds
-            // or 174 50ns clock pulses
-            // At 460800, each bit is just less than 2.2 microseconds
-            // or 43.4 50ns clock pulses
-            #200;
-            #((44 * 50) - 200);
-            for (j = 0; j < 8; j = j+1)
-            begin
-                rx = pkt[(i * 8) + j];  // data bit
-                #200;
-                #((44 * 50) - 200);
-            end
-            rx = 1'b1;               // stop bit
-            #200;
-            #((44 * 50) - 200);
-        end
-
-        #300000
+        // A packet to write '5' to outval of the out4 in slot1
+        // c0 f8 e1 00 01 05 ac b1 c0
+        #400; datin = 8'hc0;  // SLIP end
+        #100; ifrxf = 0;
+        #450; datin = 8'hf8;  // write command
+        #550; datin = 8'he1;  // peripheral #
+        #550; datin = 8'h00;  // register #
+        #550; datin = 8'h01;  // # bytes to write
+        #550; datin = 8'h05;  // value to write
+        #550; datin = 8'hac;  // CRC
+        #550; datin = 8'hb1;  // CRC
+        #550; datin = 8'hc0;  // SLIP end
+        #550; ifrxf = 1;
+        #10000;
 
         $finish;
     end
@@ -147,21 +126,4 @@ module DCM_SP(
 
 endmodule
 
-
-module RAMB16_S9 (
-        output  [7:0] DO,       // 8-bit Data Output
-        output  DOP,            // 1-bit parity Output
-        input   [10:0] ADDR,    // 11-bit Address Input
-        input   CLK,            // Clock
-        input   [7:0] DI,       // 8-bit Data Input
-        input   DIP,            // 1-bit parity Input
-        input   EN,             // RAM Enable Input
-        input   SSR,            // Synchronous Set/Reset Input
-        input   WE              // Write Enable Input
-    );
-
-    assign DO = 7'h55;
-    assign DOP = 1'd1;
- 
-endmodule
 

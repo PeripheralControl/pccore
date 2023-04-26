@@ -27,7 +27,7 @@
 # Makefile to run Verilog tests for some of the peripherals
 
 
-default: vgaterm_tb.xt2
+default: bb4out4_tb.xt2
 
 all: 
 
@@ -39,35 +39,24 @@ rcc8_tb.xt2: rcc8_tb.v ../rcc8.v
 	iverilog -o rcc8_tb.vvp ../sysdefs.h rcc8_tb.v ../rcc8.v
 	vvp rcc8_tb.vvp -lxt2
 
-mainbb4io_tb.xt2: ../boardperi.v ../main.v
-	iverilog -o mainbb4io_tb.vvp ../brddefs.h ../sysdefs.h mainbb4io_tb.v ../main.v \
-	../busif.v ../slip.v ../crc.v ../clocks.v ../hostserial.v ../boardperi.v ../in4.v ../out4.v
-	vvp mainbb4io_tb.vvp -lxt2
+sr04_tb.xt2: sr04_tb.v ../sr04.v
+	iverilog -o sr04_tb.vvp ../sysdefs.h sr04_tb.v ../sr04.v
+	vvp sr04_tb.vvp -lxt2
 
-mainspi_tb.xt2: mainspi_tb.v ../main.v ../busif.v ../crc.v ../slip.v ../dpespi.v \
-		../clocks.v ../hostserial.v ../sysdefs.h 
-	iverilog -o mainspi_tb.vvp  ../sysdefs.h mainspi_tb.v ../main.v ../busif.v \
-		../slip.v ../crc.v ../dpespi.v ../clocks.v ../hostserial.v
-	vvp mainspi_tb.vvp -lxt2
+bb4out4_tb.xt2: ../../fpgaboards/baseboard4/build/main.v bb4out4_tb.v
+	iverilog -o bb4out4_tb.vvp ../../fpgaboards/baseboard4/brddefs.h ../sysdefs.h \
+	bb4out4_tb.v ../../fpgaboards/baseboard4/build/main.v ../busif.v ../slip.v \
+	../../fpgaboards/baseboard4/bb4io.v \
+	../crc.v ../clocks.v ../hostparallel.v ../in4.v ../out4.v
+	vvp bb4out4_tb.vvp -lxt2
 
-dpcore_tb.xt2: dpcore_tb.v ../dpcore.v
-	iverilog -o dpcore_tb.vvp  dpcore_tb.v ../dpcore.v
-	vvp dpcore_tb.vvp -lxt2
-
-mainout4_tb.xt2: mainout4_tb.v ../main.v
-	iverilog -o mainout4_tb.vvp ../sysdefs.h mainout4_tb.v ../main.v ../busif.v \
-	../slip.v ../crc.v ../dpespi.v ../clocks.v ../hostserial.v ../out4.v ../in4.v
-	vvp mainout4_tb.vvp -lxt2
-
-mainin4_tb.xt2: mainin4_tb.v ../main.v
-	iverilog -o mainin4_tb.vvp ../brddefs.h ../sysdefs.h mainin4_tb.v ../main.v \
-	../busif.v ../slip.v ../crc.v ../clocks.v ../hostserial.v ../in4.v ../out4.v
+mainin4_tb.xt2: ../../fpgaboards/baseboard4/build/main.v mainin4_tb.v
+	iverilog -o mainin4_tb.vvp ../sysdefs.h \
+	mainin4_tb.v ../../fpgaboards/baseboard4/build/main.v ../busif.v ../slip.v \
+	../../fpgaboards/baseboard4/bb4io.v \
+	../crc.v ../clocks.v ../hostserial.v ../in4.v ../out4.v
 	vvp mainin4_tb.vvp -lxt2
 
-maindpespi_tb.xt2: maindpespi_tb.v ../main.v
-	iverilog -o maindpespi_tb.vvp../sysdefs.h maindpespi_tb.v ../main.v ../busif.v \
-	../slip.v ../crc.v ../dpespi.v ../clocks.v ../hostserial.v
-	vvp maindpespi_tb.vvp -lxt2
 
 clean:
 	rm -rf *.vvp *.xt2
