@@ -120,7 +120,7 @@ module dpespi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
     initial
     begin
         clksrc = 0;
-        csmode = 0;
+        csmode = `CS_MODE_AL;
         state = `IDLE;
         sndcnt = 0;
         meta = 0;
@@ -186,18 +186,18 @@ module dpespi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
                     bytcnt <= 0;
                     state <= `GETBYTE;
                 end
+            end
+            else
+            begin
+                // Getting bytes from the host.  Send SPI pkt when done
+                if ((bytcnt + 2) == sndcnt)
+                begin
+                    state <= `LOWBYTE;
+                    bitcnt <= 0;
+                end
                 else
                 begin
-                    // Getting bytes from the host.  Send SPI pkt when done
-                    if ((bytcnt + 1) == sndcnt)
-                    begin
-                        state <= `LOWBYTE;
-                        bitcnt <= 0;
-                    end
-                    else
-                    begin
-                        bytcnt <= bytcnt + 1;
-                    end
+                    bytcnt <= bytcnt + 1;
                 end
             end
         end
@@ -263,7 +263,7 @@ module dpespi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
                    (csmode == `CS_MODE_AH) ? ((state == `SNDBYTE) | (state == `LOWBYTE)) :
                    (csmode == `CS_MODE_FH) ? 1'b1 : 1'b0;
     assign a = (state == `SNDBYTE) & (bitcnt < 8) & (clkdiv[2:0] == 0);
-    assign b = ~(clkdiv[2:0] == 2) & (state == `SNDBYTE);
+    assign b = ~(clkdiv[2:0] == 2);
     assign mosi = ((clkdiv[2:0] > 0) & (clkdiv[2:0] < 4)) ? rawcs :
                    ((dout[0] & (bitcnt == 7)) |
                    (dout[1] & (bitcnt == 6)) |
