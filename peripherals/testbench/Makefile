@@ -27,7 +27,7 @@
 # Makefile to run Verilog tests for some of the peripherals
 
 
-default: bb4out4_tb.xt2
+default: bb4spi_tb.xt2
 
 all: 
 
@@ -57,6 +57,12 @@ mainin4_tb.xt2: ../../fpgaboards/baseboard4/build/main.v mainin4_tb.v
 	../crc.v ../clocks.v ../hostserial.v ../in4.v ../out4.v
 	vvp mainin4_tb.vvp -lxt2
 
+bb4spi_tb.xt2: ../../fpgaboards/baseboard4/build/main.v bb4spi_tb.v ../dgspi.v
+	iverilog -o bb4spi_tb.vvp ../../fpgaboards/baseboard4/brddefs.h ../sysdefs.h \
+	bb4spi_tb.v ../../fpgaboards/baseboard4/build/main.v ../busif.v ../slip.v \
+	../../fpgaboards/baseboard4/bb4io.v ../dgspi.v ../dpespi.v \
+	../crc.v ../clocks.v ../hostparallel.v ../in4.v ../out4.v
+	vvp bb4spi_tb.vvp -lxt2
 
 clean:
 	rm -rf *.vvp *.xt2
