@@ -104,7 +104,7 @@ module pccore(BRDIO, PCPIN);
     wire [7:0] bi0obifhdata;     // Data toward the physical interface
     wire bi0ibifhtxe_;           // Able to send new data if low
     wire bi0obifhwr;             // Write data on positive edge
-    wire bi0obofhpkt;            // High when we want to send a packet
+    wire bi0obifhpkt;            // High when we want to send a packet
     wire bi0ibifhen_;            // CRC is busy when high.  Do not poll peri's when high
     wire [11:0] bi0addr;         // address of target peripheral/register
     wire [7:0] bi0datout;        // Data OUT to the peripherals
