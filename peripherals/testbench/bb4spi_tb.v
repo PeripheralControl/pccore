@@ -32,7 +32,7 @@
 // DIRECTIONS:
 //    git clone https://github.com/peripheralcontrol/pccore.git
 //    cd pccore/fpgaboards/baseboard4
-//    # edit perilist to include dgspi as the fourth peripheral
+//    # edit perilist to include dgspi as the third peripheral
 //    vi perilist
 //    make   # OK if this fails.  We only want build/main.v
 //    cd ../../peripherals/testbench
@@ -61,7 +61,7 @@ module bb4spi_tb();
     assign BRDIO[`BRD_TXE_] = iftxe;
     assign ifrd = BRDIO[`BRD_RD_];
     assign BRDIO[`BRD_DATA_7:`BRD_DATA_0] = datin;
-    assign PCPIN[14] = miso;
+    assign PCPIN[10] = miso;    // MISO on third peripheral
 
     // generate the clock(s)
     initial  ck100mhz = 0;
@@ -78,20 +78,22 @@ module bb4spi_tb();
         ifrxf = 1;   // active low
         iftxe = 0;   // active low
 
-        // A packet to read an MCP3304
-        // c0 fa e4 01 04 04 18 00 00 e9 41 c0
+        // A packet to read a MAX31855 thermocouple sensor
+        //c0 fa e3 02 05 05 db dc 30 0c 03 40 07 c0
         #400; datin = 8'hc0;  // SLIP end
         #100; ifrxf = 0;
         #450; datin = 8'hfa;  // write command
-        #550; datin = 8'he4;  // peripheral #
-        #550; datin = 8'h01;  // register #
-        #550; datin = 8'h04;  // # bytes to write
-        #550; datin = 8'h04;  // value to write
-        #550; datin = 8'h18;  // value to write
-        #550; datin = 8'h00;  // value to write
-        #550; datin = 8'h00;  // value to write
-        #550; datin = 8'he9;  // CRC
-        #550; datin = 8'h41;  // CRC
+        #550; datin = 8'he3;  // peripheral #
+        #550; datin = 8'h02;  // register #
+        #550; datin = 8'h05;  // # bytes to write
+        #550; datin = 8'h05;  // # bytes to write
+        #550; datin = 8'hdb;  // value to write
+        #550; datin = 8'hdc;  // value to write
+        #550; datin = 8'h30;  // value to write
+        #550; datin = 8'h0c;  // value to write
+        #550; datin = 8'h03;  // value to write
+        #550; datin = 8'h40;  // CRC
+        #550; datin = 8'h07;  // CRC
         #550; datin = 8'hc0;  // SLIP end
         #550; ifrxf = 1; 
         #4000; miso = 1;

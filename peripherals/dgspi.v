@@ -34,7 +34,9 @@
 //  Registers are
 //    Addr=0    Clock select, chip select control, interrupt control and
 //              SPI mode register
-//    Addr=1    FIFO: Size of packet as the first byte followed
+//    Addr=1    Poll timer.  Send most recent pkt every polltime * 0.01 sec
+//              Disable if polltime is zero.
+//    Addr=2    FIFO: Size of packet as the first byte followed
 //              all the data bytes
 //
 //
@@ -73,11 +75,6 @@ module dgspi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
     inout  [3:0] pins;       // FPGA I/O pins
 
 
-    assign pins[0] = cs;     // SPI chip select
-    assign pins[1] = mosi;   // SPI Master Out / Slave In
-    wire   miso = pins[2];   // SPI Master In / Slave Out
-    assign pins[3] = sck;    // SPI SCK
-
     wire   myaddr;           // ==1 if a correct read/write on our address
     wire   [7:0] dout;       // RAM output lines
     wire   [LGMXPKT-1:0] raddr;      // RAM address lines
@@ -102,6 +99,14 @@ module dgspi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
     wire   sck;              // gates SCK to the output
     reg    mosi;
     reg    sckpol;           // polarity of SCK.
+    reg    [7:0] polltime;   // User set time between automatic poll of the device
+    reg    [7:0] pollcnt;    // Count of 10ms clocks. Poll when it reaches polltime
+    wire   m10clk = clocks[`M10CLK];     // utility 10.00 millisecond pulse
+
+    assign pins[0] = cs;     // SPI chip select
+    assign pins[1] = mosi;   // SPI Master Out / Slave In
+    wire   miso = pins[2];   // SPI Master In / Slave Out
+    assign pins[3] = sck;    // SPI SCK
 
     initial
     begin
@@ -119,6 +124,8 @@ module dgspi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
         int_pend = 0;
         rawsck = 0;
         sckpol = 0;
+        polltime = 0;
+        pollcnt = 0;
     end
 
 
@@ -156,7 +163,11 @@ module dgspi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
                 sckpol <= DAT_I[1];
                 state <= `IDLE;
             end
-            else if (ADR_I[LGMXPKT-1:0] == 1)    // a fifo write 
+            else if (ADR_I[LGMXPKT-1:0] == 1)    // set poll time
+            begin
+                polltime <= DAT_I;
+            end
+            else if (ADR_I[LGMXPKT-1:0] == 2)    // a fifo write 
             begin
                 // state will be IDLE on the first byte into the fifo.  This
                 // is the size of the packet to send
@@ -189,6 +200,18 @@ module dgspi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
             // ram[bytcnt].
             state <= `IDLE;
             bytcnt <= bytcnt + 1;
+        end
+
+        // Check for a poll timeout, send out pkt if timeout and idle
+        else if (m10clk && (polltime != 0))
+        begin
+            pollcnt <= pollcnt - 8'h1;
+            if (pollcnt == 0)
+            begin
+                pollcnt <= polltime;
+                if (state == `IDLE)
+                    state <= `LOWBYTE;
+            end
         end
 
         // Do the state machine to shift in/out the SPI data if sending and on clk edge
