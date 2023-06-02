@@ -41,12 +41,21 @@
 //
 //
 //  HOW THIS WORKS : Receiver
-//      Input data is store bit sequencially in a 1x44 bit RAM block.  Each
+//      Input data is store bit sequentially in a 1x44 bit RAM block.  Each
 //  negative edge of the input clock latches the data bit and increments the
 //  RAM pointer to the next bit.  Lack of a clock edge for 700 us sets the 
 //  'data_ready' line and triggers an auto send of the valid data bits.
 //
-//  HOW THIS WORKS : Transmitter (tbd)
+//  HOW THIS WORKS : Transmitter 
+//      If the receiver is idle the circuit can accept a command byte from
+//  the host.  This is stored in the RAM block.  When the last bit is received
+//  from the host the 'xmitstate' is set to 1 and the clock line is forced to
+//  zero.  At the u100 clock the state is set to 2 and the data line is forced
+//  to zero.  At the next u100 clock the state is set to 3 and the clock line
+//  is set to an input.
+//      The keyboard sends clock pulses to ready the contents of RAM.  At 
+//  RAM address equal 0x0a (the stop bit), the data line is set to be an
+//  input and the xmitstate is set back to 0 (idle).
 //
 /////////////////////////////////////////////////////////////////////////
 module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
@@ -76,6 +85,12 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
     reg    ps2clk_1;         // bring PS/2 clock into our domain
     reg    ps2clk_2;         // bring PS/2 clock into our domain
     reg    ps2clk_3;         // bring PS/2 clock into our domain
+    reg    [1:0] xmitstate;  // sequencer for sending command bytes
+    `define PS2_XMITIDLE 0
+    `define PS2_SETCLK   1
+    `define PS2_SETDATA  2
+    `define PS2_SENDDATA 3
+    
 
     // Addressing, bus interface, and spare I/O lines and registers
     wire   myaddr;           // ==1 if a correct read/write on our address
@@ -92,6 +107,7 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
         bitidx = 0;
         timer = 0;
         data_ready = 0;
+        xmitstate = 0;
     end
 
 
@@ -111,13 +127,34 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
                 bitidx <= 5'h0;
                 timer <= 3'h0;
             end
+            // send byte if the receiver is idle (6'ha is addr of stop bit)
+            else if ((ADR_I == 6'ha) && (bitidx == 0))
+            begin
+                xmitstate <= `PS2_SETCLK;
+            end
         end
 
-        // Do all receiver processing on either edge of PS2 clock
+        // Do xmit state machine on u100 clocks
+        else if (u100clk & (xmitstate == `PS2_SETCLK))
+        begin
+            xmitstate <= `PS2_SETDATA;
+        end
+        else if (u100clk & (xmitstate == `PS2_SETDATA))
+        begin
+            xmitstate <= `PS2_SENDDATA;
+            bitidx <= 0;      // there's an extra clk edge when xmit
+        end
+
+        // Do all receiver processing on negative edge of PS2 clock
         else if (ps2clockedge)
         begin
             bitidx <= bitidx + 5'h1;
             timer <= 3'h0;
+            // xmitstate goes idle if sending the stop bit of a command
+            if ((xmitstate == `PS2_SENDDATA) && (bitidx == 6'ha))
+            begin
+                xmitstate <= `PS2_XMITIDLE;
+            end
         end
 
         // Increment idle timer every 100 us, check for timeout
@@ -131,13 +168,13 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
 
 
     // Detect positive and negative PS/2 clock edges
-    assign ps2clockedge = ((ps2clk_3 == 1) && (ps2clk_2 == 1) && (ps2clk_1 == 0));
+    assign ps2clockedge = (ps2clk_3 == 1) && (ps2clk_2 == 1) && (ps2clk_1 == 0);
 
     // Route the RAM and output lines
-    assign rxaddr = (TGA_I & myaddr) ? ADR_I[5:0] : bitidx[5:0] ;
-    assign rxin = ps2din;
-    // latch data while receiving IR or when getting a packet from the host
-    assign wen  = ps2clockedge;
+    assign rxaddr = (TGA_I && myaddr) ? ADR_I[5:0] : bitidx[5:0] ;
+    assign rxin = (TGA_I && myaddr && WE_I && (bitidx == 0)) ? DAT_I[0] : ps2din;
+    // latch data if receiving PS/2 data or if getting a command byte from the host
+    assign wen  = (ps2clockedge & (xmitstate == `PS2_XMITIDLE)) | (TGA_I & myaddr & WE_I);
 
     // Assign the outputs.
     assign myaddr = (STB_I) && (ADR_I[7:5] == 0);
@@ -150,6 +187,10 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
     assign STALL_O = 0;
     assign ACK_O = myaddr;
 
+    assign pins[0] = (xmitstate == `PS2_SETDATA) ? 1'b0 :
+                     (xmitstate == `PS2_SENDDATA) ? rxout :
+                     1'bz;
+    assign pins[2] = ((xmitstate == `PS2_SETDATA) || (xmitstate == `PS2_SETCLK)) ? 1'b0 : 1'bz;
     assign ps2din  = pins[0];      // data in
     assign ps2dout = pins[1];      // data- (unused)
     assign ps2cin  = pins[2];      // clock in
