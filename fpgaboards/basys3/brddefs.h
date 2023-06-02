@@ -44,5 +44,5 @@
 `define BRD_MX_IO         (`BRD_DGT_3)
 
 `define NUM_CORE          10   // can address up to NUM_CORE peripherals
-`define MX_PCPIN          39   // 0-39 but last 8 are tied to the VGA conn!
+`define MX_PCPIN          42   // 0-31 for Pmod, 8 for VGA, 3 for PS2
 

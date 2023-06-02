@@ -7,16 +7,16 @@ Date: April 1, 2023
 
 
 basys3
-dpadc812
-dpei2c
-dpespi
-dpin32
-dpout32
-dproten
-dpio8
-dptif
+gpio4
+gpio4
+gpio4
+gpio4
+gpio4
+gpio4
+gpio4
+gpio4
 vgaterm
-
+ps2
 
 
 

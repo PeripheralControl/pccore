@@ -120,17 +120,15 @@ set_property -dict { PACKAGE_PIN K18 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[39]
 #set_property -dict { PACKAGE_PIN N18 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[38]}]; # vgaBlue[0]
 #set_property -dict { PACKAGE_PIN J17 IOSTANDARD LVCMOS33 } [get_ports {PCPIN[39]}]; # vgaGreen[0]
 
-
+#USB HID (PS/2)
+set_property -dict { PACKAGE_PIN B17   IOSTANDARD LVCMOS33   PULLUP true } [get_ports {PCPIN[40]}]; # PS2Data
+# PCPIN[41] is not defined
+set_property -dict { PACKAGE_PIN C17   IOSTANDARD LVCMOS33   PULLUP true } [get_ports {PCPIN[42]}]; # PS2Clk
 
 ## Configuration options, can be used for all designs
 set_property BITSTREAM.GENERAL.COMPRESS TRUE [current_design]
 set_property BITSTREAM.CONFIG.CONFIGRATE 33 [current_design]
 set_property CONFIG_MODE SPIx4 [current_design]
-
-
-##USB HID (PS/2)
-#set_property -dict { PACKAGE_PIN C17   IOSTANDARD LVCMOS33   PULLUP true } [get_ports PS2Clk]
-#set_property -dict { PACKAGE_PIN B17   IOSTANDARD LVCMOS33   PULLUP true } [get_ports PS2Data]
 
 
 ##Quad SPI Flash
