@@ -47,7 +47,7 @@
 
 //////////////////////////////////////////////////////////////////////////
 //
-//  Board registers for the Demand Peripherals Baseboard4
+//  Board registers for the Digilent Basys3
 //
 //  Reg 0: Switch 0-7.  Read-only, 8 bit.  Auto-send on change.
 //  Reg 1: Switch 8-15.  Read-only, 8 bit.  Auto-send on change.
