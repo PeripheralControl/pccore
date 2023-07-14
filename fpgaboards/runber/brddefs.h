@@ -52,5 +52,5 @@
 `define BRD_MX_IO         (`BRD_BTN_7)
 
 `define NUM_CORE           9   // can address up to NUM_CORE peripherals
-`define MX_PCPIN          35   // 
+`define MX_PCPIN          33   // last slot has only two pins
 
