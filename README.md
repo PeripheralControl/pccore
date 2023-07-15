@@ -26,10 +26,11 @@ https://demandperipherals.com/support/build_fpga.html.
    - [**Debug Your Peripheral with Iverilog**](#debug)<br>
    - [**How to Add a New Peripheral Driver Module**](#drv)<br>
  - [**How to Port Peripheral Control to a New FPGA Board**](#newboard)<br>
+   - [**Install the Board's Verilog Tool Chain**](#installtools)<br>
    - [**Clone an Existing FPGA Board**](#cloneboard)<br>
    - [**Create a New Pinout File**](#pinout)<br>
    - [**Create a New Board IO Peripheral**](#boardperi)<br>
-   - [**Modify the Makefile**](#makefile)<br>
+   - [**Support**](#support)<br>
 
 <br>
 <br>
@@ -261,9 +262,7 @@ Start with a working system built from source. Download the
 source code for pccore and build a binary image with the
 following commands:
 ```
-    XXXXXXX git clone ....
-    wget https://demandperipherals.com/downloads/pccore-latest.tgz
-    tar -xf pccore.tgz
+    git clone https://github.com/PeripheralControl/pccore.git
     cd pccore/fpgaboards/baseboard4
     # Edit perilist to set all peripherals to your new one
     vi perilist
@@ -276,9 +275,7 @@ because, depending on the peripherals selected, some wires  may be
 defined but never used.  Now build the API daemon with the following
 commands.
 ```
-    XXXXXXX git clone ....
-    wget https://demandperipherals.com/downloads/pcdaemon-latest.tgz
-    tar -xf pcdaemon.tgz
+    git clone https://github.com/PeripheralControl/pcdaemon.git
     cd pcdaemon
     make
     sudo make install
@@ -804,7 +801,7 @@ including the command (PCGET, PCSET, or PCCAT), the resource
 index you set in Initialize(), and the string of the new value,
 There can be many instances of your peripheral, so the callback
 includes a SLOT pointer from which you can the the instance's
-private data structer.  Your response the the application that
+private data structure.  Your response the the application that
 issued the command should be a newline terminated line of ASCII
 text.  The text goes into the 'buf' parameter and before
 returning you set *plen to the number of characters you put in
@@ -1068,22 +1065,279 @@ resulting system is all non-FPGA peripherals.
 
 <span id="newboard"></span>
 # How to Port Peripheral Control to a New FPGA Board
-This section describes how to port the Peripheral Control project to a new
-FPGA board. 
+This section describes how to port the Peripheral Control project
+to a new FPGA board. 
+
+Peripheral Control uses a Makefile based build system.  Most FPGA
+vendors assume you want to use an IDE for application development.
+It usually takes a fair amount of work to unravel the IDE in order
+to build a Makefile for a new FPGA.  However, it is this effort that
+makes it easy to use the same Verilog source code for different FPGAs.
+Peripheral Control currently supports these tool chains:
+```
+ - Xilinx Vivado
+ - Xilinx ISE
+ - Gowin
+ - Lattice Diamond
+```
+The Efinix tool chain does not support the high impedance (z)
+state for a pin.  This makes the Efinix tool chain incompatible
+with Peripheral Control.
+
+<span id="installtools"></span>
+### Install the Board's Verilog Tool Chain
+The first step in porting to a new FPGA board is to install the
+FPGA's Verilog tool chain.  This usually involves setting up an
+account on the FPGA manufacturer's web site.  Download the tools
+and follow the vendor's User's Guide to install the tools.  
+
+Most boards come with source code for a sample application.  Test
+the tool chain installation by following the directions provided
+by the board vendor to build the sample application.  Downloading
+the sample application to the board is a good idea but is not
+required.
 
 <span id="cloneboard"></span>
 ### Clone an Existing FPGA Board
-  (in progress)
+The easiest way to port Peripheral Control to a new board is to
+clone an existing port that uses the same tool chain.  In this
+tutorial we will use the example of porting to the Runber FPGA
+board.  It uses the same Gowin FPGA as the TangNano4k.  All of
+the code lines below are from our port to the Runber board.
+
+Change directory to the board you are going to copy and do a
+test build of it.
+```
+    git clone https://github.com/peripheralcontrol/pccore
+    cd pccore/fpgaboards/tang4k
+    vi Makefile # point the tool path to your tool chain
+    make
+```
+Change directory to fpgaboards, create the new target directory,
+and copy the existing port to the new directory.  Rename the
+configuration files and board support file.  Edit the perilist
+file to include the new board support file. In this example the
+new board support file is called runber.v.  Edit the board support
+file and rename its peripheral to the new board name.   This
+is probably a good time to edit the header information in the
+board support file.  Verify that the Makefile refers to the 
+new board and its configuration file.
+```
+    cd ..
+    mkdir runber
+    cp -r tang4k runber
+    cd runber
+    mv tang4k.cst runber.cst
+    vi perilist  # new board peripheral should be first peripheral
+    mv tang4k.v runber.v
+    vi runber.v  # rename peripheral instance
+    vi Makefile  # reference new board support file if needed
+```
+Each peripheral is assigned a unique identification number.  The
+ID numbers of the peripherals in a Peripheral Control build 
+are stored in a table that is always part of Peripheral #0.  In
+this way the Linux daemon can interrogate the FPGA to get a list
+of peripherals in the build.  The Linux daemon then loads the
+drivers (.so files) appropriate to each peripheral in the list.
+
+Your new board support peripheral has to be added to the list
+of peripherals IDs.  Add it to the bottom of drivlist.h in both
+pccore/peripherals and in pcdaemon/includes.  Note that a board
+support peripheral does not use any connector pins so the last
+two entries will be zero.
+```
+    # add the following line to drivlist.h 
+    # {"runber", 53, "runber", 0x0, 0 },
+    vi ../../peripherals/drivlist.h
+    # git clone pcdaemon if you have not already
+    vi ../../../pcdaemon/include/drivlist.h
+    make
+```
+If a build succeeds at this point you are ready to move onto the
+next step.
+
 
 <span id="pinout"></span>
 ### Create a New Pinout File
-  (in progress)
+FPGA pins are physically identified by a pin number or a XY coordinate
+if in a ball grid array package.  A configuration file maps the 
+physical pin numbers to logical names used by Verilog.
+
+Gowin uses a configuration file with the extension .cst.  For Vivado it
+is .xdc and for ISE it is .ucf.  Each tool chain has a unique syntax for
+the configuration file but all are similar -- they have the physical name,
+some attributes, and the logical name.  For example, this is an entry for
+a Gowin configuration file:
+```
+    IO_LOC "BRDIO[ 0]" 45;
+    IO_PORT "BRDIO[ 0]" PULL_MODE=UP;
+```
+The above two lines would usually be combined as:
+```
+    IO_LOC "BRDIO[ 0]" 45; IO_PORT "BRDIO[ 0]" PULL_MODE=UP;
+```
+Peripheral Control breaks an FPGA board's pins into two arrays. One is
+for peripherals on the board: LEDs, buttons, clocks, and the like.  The
+other is for pins that go out to the IO connectors on the board.
+The second group has the pins assigned to the peripherals you select
+for the build.
+
+The logical names for the FPGA pins get into the Verilog through the
+top-most module in the build.  The Peripheral Control top module is the
+same for all supported FPGAs and that is:
+```
+    module pccore(BRDIO, PCPIN);
+      inout  [`BRD_MX_IO:0]  BRDIO;     // Board IO 
+      inout  [`MX_PCPIN:0]   PCPIN;     // PC Pins (for Pmods)
+```
+
+The Runber board from Seeed Studio has a very nice User's Manual and schematic
+available.  Look for RUNBER_Development_Board_Hardware_Instructions_en.pdf
+and Runber_Development_Board_Schematics.pdf on the Seeed Studio web site.
+The onboard peripherals include:
+```
+ - A 12 MHz oscillator (1 pin)
+ - A four digit seven segment display (12 pins)
+ - Eight LEDs (8 pins)
+ - Four RGB LEDs (12 pins)
+ - An eight position DIP switch (8 pins)
+ - Eight push buttons (8 pins)
+```
+To the above list we add two pins for the serial link to the host.  This
+gives a total of fifty-one pins to put in the BRDIO array.  Here is
+a sample of BRDIO from the finished runber.cst configuration file.
+```
+IO_LOC "BRDIO[ 0]"   4; IO_PORT "BRDIO[ 0]" PULL_MODE=NONE; // CLK 12 MHz
+IO_LOC "BRDIO[ 1]" 136; IO_PORT "BRDIO[ 1]" PULL_MODE=UP;   // Tx, J2 pin 2
+IO_LOC "BRDIO[ 2]" 135; IO_PORT "BRDIO[ 2]" PULL_MODE=NONE; // Rx, J2 pin 3
+IO_LOC "BRDIO[ 3]" 137; IO_PORT "BRDIO[ 3]" PULL_MODE=NONE; // Leftmost digit
+IO_LOC "BRDIO[ 4]" 140; IO_PORT "BRDIO[ 4]" PULL_MODE=NONE; // Digit 1
+IO_LOC "BRDIO[ 5]" 141; IO_PORT "BRDIO[ 5]" PULL_MODE=NONE; // Digit 2
+IO_LOC "BRDIO[ 6]"   7; IO_PORT "BRDIO[ 6]" PULL_MODE=NONE; // Digit 3
+IO_LOC "BRDIO[ 7]" 138; IO_PORT "BRDIO[ 7]" PULL_MODE=NONE; // Segment A
+```
+The file brddefs.h has defines for board IO.  This file makes the Verilog
+in the board support file easier to read.  Your brddef.h will be different
+but for the Runber the file has:
+```
+`define BRD_CLOCK          0
+`define BRD_TX             1
+`define BRD_RX             2
+`define BRD_DGT_0          3
+`define BRD_DGT_3          6
+`define BRD_SEG_A          7
+`define BRD_SEG_DP        14
+`define BRD_LED_0         15
+`define BRD_LED_7         22
+`define BRD_RED0          23
+`define BRD_RED3          26
+`define BRD_GRN0          27
+`define BRD_GRN3          30
+`define BRD_BLU0          31
+`define BRD_BLU3          34
+`define BRD_SW_0          35
+`define BRD_SW_7          42
+`define BRD_BTN_0         43
+`define BRD_BTN_7         50
+`define BRD_MX_IO         (`BRD_BTN_7)
+`define NUM_CORE           9   // can address up to NUM_CORE peripherals
+`define MX_PCPIN          33   // last slot has only two pins
+```
+Some FPGA boards (Basys3, Baseboard4) use the same USB interface to program
+the FPGA as the host interface.  However, most boards, including the Runber,
+use an Rx/Tx serial link to the host.  
+
+Once the pin configuration file is set you next need to change the Makefile
+to match the part on the board.  You should be able to get this from the
+original sample application that you built earlier.  Alternatively, you can
+open the IDE for the tool chain and create a new project for the FPGA on
+your target card.  This usually gives the proper name needed by the Verilog
+compiler.  The TangNano 4K uses a "GW1NSR-LV4CQN48PC7/I6 GW1NSR-4C" and the
+Runber uses a "GW1N-UV4LQ144C6/I5 GW1N-4D".
+
+You can try a compile at this point.  The FPGA should be recognized but the
+build will almost certainly fail since the IO for the board is not yet in
+place.
+
 
 <span id="boardperi"></span>
 ### Create a New Board IO Peripheral
-  (in progress)
+The board support file has three components:
+```
+ - clock generator
+ - host interface to board IO
+ - peripheral driver ID list
+```
 
-<span id="make"></span>
-### Modify the Makefile
-  (in progress)
+Most FPGA boards have a crystal oscillator connected to one of the input pins.
+The board support file has to convert the input frequency of that oscillator
+to 100 MHz.  This usually requires the use of one of the FPGA's phase-locked
+loops.  PLLs seem to vary a lot from one manufacturer to another and often
+even within an FPGA family.  It seems the PLL can be part of how a manufacturer
+differentiates low-end FPGAs from more expensive ones.
+
+Start the new board support file by removing most of the code from the copied
+file.  Remove all the host interface logic for IO leaving in place the address
+decoding and the peripheral driver ID list.  Modify the clock module so the 
+the output clock is just assigned equal to the input clock.
+
+Our initial version of runber.v had the following stub for generating the
+100 MHz clock.
+```
+// Use a PLL to convert the 12 MHz board clock to 100 MHz
+module CK12to100 (clkout, clkin);
+output clkout;      // 100 MHz
+input  clkin;       // board clock at 12 MHz
+
+assign clkout = clkin
+
+endmodule
+```
+The invocation for the above is in the runber module and appears as:
+```
+    // Convert the 12 MHz clock to 100 MHz.  
+    CK12to100 ck12to100(ck100mhz, BRDIO[`BRD_CLOCK]);
+    clocks gensysclks(ck100mhz, CLK_O, clocks);
+```
+A make should succeed with the above changes in place.  There may be a lot of 
+warnings about unused pins.
+
+The next step is to get the PLL to work.  You're in luck if the target FPGA
+has the same type of PLL as the FPGA board copied initially.  Just copy in
+the original PLL code.  If the PLL is different you may want to open the IDE
+for the tool chain and create a new project using the FPGA on your board.
+Once the project is created you should have a menu pull-down item that lets
+you add different manufacturer IP blocks.  Locate the pull-down and add a PLL.
+Customize the PLL to convert from you input clock frequency to 100 MHz. 
+Save the project.  In the project source directories you should find the
+Verilog to instantiate and configure a PLL for your FPGA.  Copy this code to
+your board support file.  PLL configuration can be tricky.  Don't be surprised
+if your first attempt to build fails.
+
+Once the build succeeds you can choose to continue by adding the board specific
+IO elements and a host interface to them, or you can try to download to the
+target board.  If you choose the latter you may want to test the PLL by dividing
+the 100 MHz clock by four and assigning it to one of the output pins.  Use an
+oscilloscope to verify that the divided clock output is at 25 MHz.  If not, 
+reconfigure the PLL until you get the right clock frequency.  Note that you
+have to use two PLLs in some cases.  For example the Tang Nano 4K had to go
+from 27 to 150 MHz in one step and then from 150 to 100 MHz using a second PLL.
+
+Getting the PLL to work is usually the most difficult part of coding the board
+support file.  The greatest amount of time, however, is usually adding a host
+interface to the buttons, LEDs, and displays on your FPGA board.  This host
+interface is just a Wishbone peripherals as described in an earlier section
+of this page.
+
+The list of peripheral ID numbers, periids, is generated automatically as part
+of the build.  You should not need to modify how it is generated or used.
+
+<span id="support"></span>
+### Support
+Porting Peripheral Control to a new board is always easy.  If you find that
+you would like some help or advice on a port you can contact the Peripheral
+Control developers via Github or via the support page on the Demand
+Peripherals web site.  Demand Peripherals, Inc, is the company behind the
+Peripheral Control project.
+
 
