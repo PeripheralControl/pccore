@@ -91,11 +91,6 @@ module dpespi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
     wire u1clk   =  clocks[`U1CLK];      // utility 1.000 microsecond pulse on global clock line
     wire n100clk =  clocks[`N100CLK];    // utility 100.0 nanosecond pulse on global clock line
 
-    assign pins[0] = mosi;   // SPI Master Out / Slave In
-    assign pins[1] = a;      // Encoded SCK/CS TGA_I
-    assign pins[2] = b;      // Encoded SCK/CS TGA_I
-    wire   miso = pins[3];   // SPI Master In / Slave Out
- 
     wire   myaddr;           // ==1 if a correct read/write on our address
     wire   [7:0] dout;       // RAM output lines
     wire   [LGMXPKT-1:0] raddr;      // RAM address lines
@@ -104,6 +99,9 @@ module dpespi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
     wire   wen;              // RAM write enable
     wire   smclk;            // The SPI state machine clock (=2x sck)
     wire   rawcs;            // CS from the user
+    wire   a;                // CS/SCK encoded
+    wire   b;                // CS/SCK encoded
+    wire   mosi;             // master out slave in
     reg    [1:0] clksrc;     // SCK clock frequency (2,1,.5,.1 MHz)
     reg    [1:0] csmode;     // Chip select mode of operation
     reg    [LGMXPKT:0] sndcnt;     // Number of bytes in the SPI pkt 
@@ -117,6 +115,11 @@ module dpespi(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
     reg    int_pol;          // Interrupt polarity, 1==int pending if MISO is high while CS=0
     reg    int_pend;         // We've sent an interrupt packet, no need to send another
 
+    assign pins[0] = mosi;   // SPI Master Out / Slave In
+    assign pins[1] = a;      // Encoded SCK/CS TGA_I
+    assign pins[2] = b;      // Encoded SCK/CS TGA_I
+    wire   miso = pins[3];   // SPI Master In / Slave Out
+ 
     initial
     begin
         clksrc = 0;
