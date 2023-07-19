@@ -76,8 +76,6 @@ module basys3(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDI
     inout  [`MX_PCPIN:0]   PCPIN;     // Peripheral Controller Pins (for Pmods)
  
     wire   myaddr;           // ==1 if a correct read/write on our address
-    reg    [2:0] btn0;       // bring buttons into our clock domain
-    reg    [2:0] btn1;       // bring buttons into our clock domain
     reg    data_ready;       // ==1 if we have new data to send up to the host
     wire   [15:0] perid;     // ID of peripheral in core specified by ADR_I 
     perilist periids(ADR_I[4:1], perid);
