@@ -344,11 +344,11 @@ endmodule
     reg [21:0] rdreg;            // RAM output register
     reg [21:0] ram[3199:0];      // 80x40
     wire [11:0] rdaddr;          // 12 bit read address
-    wire [5:0]  realrrow;        // read row with offset
+    wire [6:0]  realrrow;        // read row with offset
     wire [11:0] wraddr;          // 12 bit write address
-    wire [5:0]  realwrow;        // write row with offset
-    assign realrrow = (rr + roff < 6'd40) ? (rr + roff) : (rr + roff - 6'd40);
-    assign realwrow = (wr + roff < 6'd40) ? (wr + roff) : (wr + roff - 6'd40);
+    wire [6:0]  realwrow;        // write row with offset
+    assign realrrow = (rr + roff < 7'd40) ? (rr + roff) : (rr + roff - 7'd40);
+    assign realwrow = (wr + roff < 7'd40) ? (wr + roff) : (wr + roff - 7'd40);
     assign rdaddr = (realrrow << 6) + (realrrow << 4) + rc;
     assign wraddr = (realwrow << 6) + (realwrow << 4) + wc;
 
