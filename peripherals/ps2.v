@@ -124,7 +124,7 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
             if (~WE_I)
             begin
                 data_ready <= 0;     // Clear data ready on a read
-                bitidx <= 5'h0;
+                bitidx <= 6'h0;
                 timer <= 3'h0;
             end
             // send byte if the receiver is idle (6'ha is addr of stop bit)
@@ -148,7 +148,7 @@ module ps2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
         // Do all receiver processing on negative edge of PS2 clock
         else if (ps2clockedge)
         begin
-            bitidx <= bitidx + 5'h1;
+            bitidx <= bitidx + 6'h1;
             timer <= 3'h0;
             // xmitstate goes idle if sending the stop bit of a command
             if ((xmitstate == `PS2_SENDDATA) && (bitidx == 6'ha))
