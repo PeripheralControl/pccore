@@ -100,11 +100,14 @@ module dptif(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
 
     wire m10clk  =  clocks[`M10CLK];     // utility 10.00 millisecond pulse
     wire u1clk   =  clocks[`U1CLK];      // utility 1.000 microsecond pulse 
+    wire   a;                // CS/SCK encoded
+    wire   b;                // CS/SCK encoded
+    wire   mosi;             // master out slave in
  
-    wire   pin2 = pins[0];   // Pin2 to the tif card.  Clock control and data.
-    wire   pin4 = pins[1];   // Pin4 to the tif card.  Clock control.
-    wire   pin6 = pins[2];   // Pin6 to the tif card.  Clock control.
-    wire   pin8 = pins[3];   // Serial data from the tif
+    assign pins[0] = mosi;   // SPI Master Out / Slave In
+    assign pins[1] = a;      // Encoded SCK/CS TGA_I
+    assign pins[2] = b;      // Encoded SCK/CS TGA_I
+    wire   miso = pins[3];   // SPI Master In / Slave Out
 
     // State variables
     reg    [3:0] bst;        // Bit number for current card access
@@ -165,7 +168,7 @@ module dptif(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
 
     always @(posedge CLK_I)
     begin
-        sample <= pin8;
+        sample <= miso;
 
         // reading reg 1 clears the dataready flag
         if (TGA_I && ~WE_I && myaddr && (ADR_I[2:0] == 1))
@@ -396,10 +399,10 @@ module dptif(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
     assign faddr = depth - 4'h1;
 
     // Assign the outputs.
-    assign pin2 = ((gst == 4) || (gst == 5) || (gst == 10) ||     // set RCK on 74165
+    assign mosi = ((gst == 4) || (gst == 5) || (gst == 10) ||     // set RCK on 74165
                    (((gst == 6) || (gst == 7) || (gst == 8)) && sendbit));
-    assign pin4 = (gst == 8);
-    assign pin6 = ((gst == 2) || (gst == 5) || (gst == 6) || (gst == 7)
+    assign a    = (gst == 8);
+    assign b    = ((gst == 2) || (gst == 5) || (gst == 6) || (gst == 7)
                 || (gst == 8) || (gst == 9));
 
     assign myaddr = (STB_I) && (ADR_I[7:3] == 0);
