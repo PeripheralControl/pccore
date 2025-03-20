@@ -27,13 +27,13 @@
 # Makefile to run Verilog tests for some of the peripherals
 
 
-default: bb4ps2_tb.xt2
+default: patgen64_tb.xt2
 
 all: 
 
-vgaterm_tb.xt2: vgaterm_tb.v ../vgaterm.v
-	iverilog -o vgaterm_tb.vvp ../sysdefs.h vgaterm_tb.v ../vgaterm.v ../font437.v
-	vvp vgaterm_tb.vvp -lxt2
+patgen64_tb.xt2: patgen64_tb.v ../patgen64.v
+	iverilog -o patgen64_tb.vvp ../sysdefs.h patgen64_tb.v ../patgen64.v 
+	vvp patgen64_tb.vvp -lxt2
 
 rcc8_tb.xt2: rcc8_tb.v ../rcc8.v
 	iverilog -o rcc8_tb.vvp ../sysdefs.h rcc8_tb.v ../rcc8.v
