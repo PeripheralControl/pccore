@@ -18,6 +18,7 @@ https://demandperipherals.com/support/build_fpga.html.
  - [**System  Architecture**](#arch)<br>
  - [**How to Build the Peripheral Control Project**](#build)<br>
    - [**Supported FPGA Boards**](#boards)<br>
+   - [**Tool Chain Installation**](#toolchain)<br>
    - [**Make, Download, and Test**](#maketest)<br>
  - [**How to Write a New Peripheral**](#newperi)<br>
    - [**The Peripheral Control Wishbone bus**](#wish)<br>
@@ -26,11 +27,10 @@ https://demandperipherals.com/support/build_fpga.html.
    - [**Debug Your Peripheral with Iverilog**](#debug)<br>
    - [**How to Add a New Peripheral Driver Module**](#drv)<br>
  - [**How to Port Peripheral Control to a New FPGA Board**](#newboard)<br>
-   - [**Install the Board's Verilog Tool Chain**](#installtools)<br>
    - [**Clone an Existing FPGA Board**](#cloneboard)<br>
    - [**Create a New Pinout File**](#pinout)<br>
    - [**Create a New Board IO Peripheral**](#boardperi)<br>
-   - [**Support**](#support)<br>
+   - [**Modify the Makefile**](#makefile)<br>
 
 <br>
 <br>
@@ -90,6 +90,55 @@ supported FPGA board.
     https://www.ebay.com/itm/325278731641))<br>
 
 <img src=fpgaboards/axelxo2/MachXO2.png width=150> <img src=fpgaboards/baseboard4/bb4.jpg width=150> <img src=fpgaboards/basys3/Basys-3.png width=150> <img src=fpgaboards/runber/runber.png width=150> <img src=fpgaboards/stepxo2/stepxo2.jpg width=150> <img src=fpgaboards/tang4k/tang4k.png width=150>
+
+<br>
+<br>
+
+<span id="toolchain"></span>
+### Tool Chain Installation
+Most FPGA development cards have a sample "Hello, World!" application
+with step-by-step instructions to download, install, and test the
+FPGA manufacturer's tool chain.  The first step in building Peripheral
+Control is to install the FPGA's tool chain.
+
+Once the tool chain is installed and you can build the sample application
+you should verify that you can download it to the FPGA card.  Some FPGA
+tool chains have obsolete or obscure ways to install the application
+binary.  You might want to copy and modify the commands in the "install"
+section of the relevant pccore/fpgaboards Makefile.  Most of the boards
+supported by Peripheral Control use openFPGAloader for downloading to the
+target.
+
+<br>
+<br>
+
+<span id="maketest"></span>
+### Make, Download, and Test
+The next step is to change directory to the pccore/fpgaboards directory
+for your board.  Test the tool chain by entering ```make```.  This often
+fails since the path for your tool chain might be different from what is
+in the Makefile.  Edit the Makefile to give the right path to your 
+Verilog compiler.  You may have to search a little to find the real
+location of the compiler.  Contact support@demandperipherals.com if you
+want help getting your system to build.
+
+Once the system is building you will probably want to edit the perilist
+file so that it includes the specific peripherals you want in your build.
+
+Most of the board Makefiles include an "install" target.  You should be
+able to download your binary image with a ```make install``` command.
+
+An easy way to test your binary is to run pcdaemon again it and see
+if all the peripherals you want are present.  The directions to install
+pcdaemon are elsewhere but if it is installed you can test your build
+with the commands:
+
+    pcdaemon -ef -s /dev/ttyUSB0
+    pclist
+
+One of the reasons to build your own FPGA binary is in order to add
+a new peripheral.  Writing a new peripheral is described in the next
+section.
 
 <br>
 <br>
@@ -366,8 +415,8 @@ This guide can not give you specific advice about your new
 peripheral but we can give some tips for its design and coding.
 
 Your Verilog design actually starts with the driver and its API.
-Try to design the resources in the API to match how your view
-of the peripheral at a high level.  Your design goal is to put
+Try to design the resources in the API to match how you view
+the peripheral at a high level.  Your design goal is to put
 as much logic into the driver as possible so that the FPGA part
 of the peripheral can be as small and as simple as possible.
 Once you've got a view of what the driver and Verilog each do,
@@ -1084,18 +1133,11 @@ The Efinix tool chain does not support the high impedance (z)
 state for a pin.  This makes the Efinix tool chain incompatible
 with Peripheral Control.
 
-<span id="installtools"></span>
-### Install the Board's Verilog Tool Chain
-The first step in porting to a new FPGA board is to install the
-FPGA's Verilog tool chain.  This usually involves setting up an
-account on the FPGA manufacturer's web site.  Download the tools
-and follow the vendor's User's Guide to install the tools.  
+This section shows how to port to a new FPGA board if the tool chain
+is already supported.  The example code in this section is for the
+port to the Runber FPGA card from SeeedStudio.
 
-Most boards come with source code for a sample application.  Test
-the tool chain installation by following the directions provided
-by the board vendor to build the sample application.  Downloading
-the sample application to the board is a good idea but is not
-required.
+<br>
 
 <span id="cloneboard"></span>
 ### Clone an Existing FPGA Board
@@ -1125,7 +1167,7 @@ new board and its configuration file.
 ```
     cd ..
     mkdir runber
-    cp -r tang4k runber
+    cp -r tang4k/* runber
     cd runber
     mv tang4k.cst runber.cst
     vi perilist  # new board peripheral should be first peripheral
