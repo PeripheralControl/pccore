@@ -92,8 +92,8 @@ module hostinterface(clk, m10clk, BRDIO,
     hostrx rx(clk,rxd,ohshfdata,ohshfrxf_,ihsfhrd_,baudrate);
 
     // instantiate the transmitter
-    //hosttx tx(clk,ihsfhwr,buffull,ihsfhdata,txd,baudrate);
     hosttx tx(clk,ihsfhwr,buffull,ihsfhdata,txd,baudrate);
+
 
     initial
     begin
