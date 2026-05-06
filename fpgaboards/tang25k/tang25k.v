@@ -105,6 +105,7 @@ input clkin;
 wire clkfbout_o;
 wire [7:0] mdrdo_o;
 wire gw_gnd;
+wire lock;
 
 assign gw_gnd = 1'b0;
 

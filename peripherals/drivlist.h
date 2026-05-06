@@ -73,12 +73,12 @@ struct PDESC pdesc[] = {
     // or, if you will, the table of .so files.
  
     {"null", 1, "null", 0x0, 0 },
-    {"serout8", 2, "serout", 0xff, 8 },
+    {"serout8", 2, "serout8", 0xff, 8 },
     {"rcc8", 3, "rcc8", 0xff, 8 },
     {"rcc4", 4, "rcc4", 0xf, 4 },
     {"ws2812", 5, "ws2812", 0xf, 4 },
     {"rcrx", 6, "rcrx", 0xe, 4 },
-    {"serout4", 7, "serout", 0xf, 4 },
+    {"serout4", 7, "serout4", 0xf, 4 },
     {"dproten", 8, "dproten", 0x8, 4 },
     {"servo4", 9, "servo4", 0xf, 4 },
     {"stepu", 10, "stepu", 0xf, 4 },
@@ -128,6 +128,7 @@ struct PDESC pdesc[] = {
     {"cmods7", 54, "cmods7", 0x0, 0 },
     {"patgen64", 55, "patgen64", 0xf, 4 },
     {"tang25k", 56, "tang25k", 0x0, 0 },
+    {"line7", 57, "line7", 0xff, 8 },
 };
 
 #define NPERI (sizeof(pdesc) / sizeof(struct PDESC))

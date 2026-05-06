@@ -220,7 +220,7 @@ void perilist(int addr, int startpin, int dirs, int numpins, char *peri)
     printf("bc0clocks,p%02dpins);\n", addr);
     for (i = 0; i < numpins; i++) {
         // Ignore assignments above max PCPIN.  IO pins are not always in multiples of 4
-        if (startpin + 1 > MX_PCPIN)
+        if (startpin + i > MX_PCPIN)
             break;
 
         if (dirs & (1<<i))     // set direction
