@@ -74,7 +74,7 @@ module line7(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
     wire   [7:0] countin;    // RAM input lines
     wire   [2:0] raddr;      // RAM address lines
     wire   countwen;         // RAM write enable
-    ram8x8rcc rccram(countout,raddr,countin,CLK_I,countwen);
+    ram8x8ln7 rccram(countout,raddr,countin,CLK_I,countwen);
     reg    [2:0] rccsel;     // Select which input pin to examine
 
     // Generate the clock source for the timers
@@ -203,7 +203,7 @@ module line7(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
 
 endmodule
 
-module ram8x8rcc(dout,addr,din,wclk,wen);
+module ram8x8ln7(dout,addr,din,wclk,wen);
     output   [7:0] dout;
     input    [2:0] addr;
     input    [7:0] din;

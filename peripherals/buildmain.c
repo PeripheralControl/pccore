@@ -46,7 +46,7 @@
 // Maximum name length for a peripheral
 #define PERILEN       20
 // Number of entries in the drivlist table
-#define NUMDRIVR      16
+#define NUMDRIVR      32
 
 
 // Give forward references for the peripheral invocation functions
@@ -176,7 +176,7 @@ int main(int argc, char *argv[])
     // Add the list of peripheral driver IDs
     printf("\n");
     printf("module perilist(core, id);\n");
-    printf("    input  [3:0] core;\n");
+    printf("    input  [4:0] core;\n");
     printf("    output [15:0] id;\n");
     printf("    assign id = \n");
     for (i = 0; i < NUMDRIVR -1; i++)
