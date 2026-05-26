@@ -187,7 +187,7 @@ module line7(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins)
                        ((rccsel == 3) && (rccval[3] == polarity)) ||
                        ((rccsel == 4) && (rccval[4] == polarity)) ||
                        ((rccsel == 5) && (rccval[5] == polarity)) ||
-                       ((rccsel == 6) && (rccval[7] == polarity)));
+                       ((rccsel == 6) && (rccval[6] == polarity)));
 
 
     assign myaddr = (STB_I) && (ADR_I[7:4] == 0);
