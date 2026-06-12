@@ -238,8 +238,8 @@ module sndgen(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins
     // Mixer            
     assign sigout = (~output_enable) ? 8'h0 : osc_out - lfsr_out;
 
-    // Assign the outputs.
-    assign pins =  sigout[7:5];
+    // Assign the outputs.  High four bits go to a R-2R ADC or equivalent
+    assign pins =  sigout[7:4];
 
     assign myaddr = (STB_I) && (ADR_I[7:4] == 0);
     assign DAT_O = (~myaddr) ? DAT_I : 
