@@ -61,7 +61,7 @@ module axo2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDIO,
  
     wire   myaddr;           // ==1 if a correct read/write on our address
     wire   [15:0] perid;     // ID of peripheral in core specified by ADR_I 
-    perilist periids(ADR_I[4:1], perid);
+    perilist periids(ADR_I[5:1], perid);
     reg    [7:0] leds;       // Can not connect pins directly
 
     // Use the internal oscillator to generate a 133 MHz clock.  Use a

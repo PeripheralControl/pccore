@@ -74,7 +74,7 @@ module cmods7(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDI
     reg    [1:0] btn1;       // bring buttons into our clock domain
     reg    data_ready;       // ==1 if we have new data to send up to the host
     wire   [15:0] perid;     // ID of peripheral in core specified by ADR_I 
-    perilist periids(ADR_I[4:1], perid);
+    perilist periids(ADR_I[5:1], perid);
     wire   n10clk;           // ten nanosecond clock
     reg    [2:0] rgbreg;     // RGB LEDs
     reg    [3:0] ledreg;     // image/copy of the pins on Slot #0
