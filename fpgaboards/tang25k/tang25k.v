@@ -47,7 +47,7 @@ module tang25k(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRD
  
     wire   myaddr;           // ==1 if a correct read/write on our address
     wire   [15:0] perid;     // ID of peripheral in core specified by ADR_I 
-    perilist periids(ADR_I[6:1], perid);
+    perilist periids(ADR_I[5:1], perid);
     wire   ck100mhz;         // 100 MHz clock
     wire   ck50mhz;          // 50 MHz clock for PLL debugging
     reg    [1:0] hist1;      // current values of the user buttons
