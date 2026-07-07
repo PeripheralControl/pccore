@@ -129,7 +129,8 @@ struct PDESC pdesc[] = {
     {"patgen64", 55, "patgen64", 0xf, 4 },
     {"tang25k", 56, "tang25k", 0x0, 0 },
     {"line7", 57, "line7", 0xff, 8 },
-    {"fgen", 58, "fgen", 0xff, 8 },
+    {"fgenR2R", 58, "fgenR2R", 0xff, 8 },
+    {"fgenR3R", 59, "fgenR3R", 0xf, 4 },
 };
 
 #define NPERI (sizeof(pdesc) / sizeof(struct PDESC))

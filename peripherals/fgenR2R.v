@@ -74,7 +74,7 @@
 `define OSC_TRIANGLE  2
 `define OSC_SQUARE    3
 
-module fgen(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
+module fgenR2R(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
     input  CLK_I;            // system clock
     input  WE_I;             // direction of this transfer. Read=0; Write=1
     input  TGA_I;            // ==1 if reg access, ==0 if poll
@@ -106,7 +106,7 @@ module fgen(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
         phase = 0;
     end
 
-    waveform_table waveform (clocks[`N10CLK], 1'h0, phase[31:24], 8'h0, sine_val);
+    waveform_tableR2R waveform (clocks[`N10CLK], 1'h0, phase[31:24], 8'h0, sine_val);
 
     always @(posedge CLK_I)
     begin
@@ -166,7 +166,7 @@ endmodule
 
 // Waveform lookup table preloaded with sine.
 // This could be modified to be writable by the user.
-module waveform_table (clk, we, addr, din, dout);
+module waveform_tableR2R (clk, we, addr, din, dout);
     input clk;
     input we;
     input [7:0] addr;
