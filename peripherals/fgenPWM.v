@@ -33,7 +33,7 @@
 //  asymmetric.  Fgen uses 8 FPGA pins and is intended to drive an R-2R
 //  digital to analog converter.
 //
-//  Fgen uses a 24 bit phase accumulator with an update rate of 100 MHz.
+//  Fgen uses a 32 bit phase accumulator with an update rate of 100 MHz.
 //  Asymmetric output is achieved by having two phase offsets, one for
 //  use while the phase MSB is zero and one for use while the phase MSB is
 //  one.  The higher level application must use the desired symmetry and
@@ -46,12 +46,10 @@
 //  is modified and sent directly to the output pin for triangle and square
 //  wave outputs.
 //
-//  The four output pins are each driven by a 2 bit PWM signal that give
-//  average voltages of 0, V/3, 2V/3, and V for output values. The PWM is
-//    00  ___
-//    01  __-
-//    10  _--
-//    11  ---
+//  For the PWM version of fgen:
+//  The low output pins is driven by an 8 bit PWM of the output.
+//  The next low output is driven by a first order delta sigma.
+//  The two high bits are driven by the MSBs of the phase accumulator.
 //
 //  Registers:
 //      0:  Mode in low two bits:
@@ -81,7 +79,7 @@
 `define OSC_TRIANGLE  2
 `define OSC_SQUARE    3
 
-module fgenR3R(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
+module fgenPWM(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
     input  CLK_I;            // system clock
     input  WE_I;             // direction of this transfer. Read=0; Write=1
     input  TGA_I;            // ==1 if reg access, ==0 if poll
@@ -103,8 +101,8 @@ module fgenR3R(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pin
     reg    [31:0] phase;           // phase accumulator
     wire   [7:0] sine_val;         // value from sine lookup table
     wire   [7:0] fgenout;          // value as input to the DAC
-    reg    [3:0] pwmcount;         // counter for PWM output to pins.  PWM at 50 MHz
-
+    reg    [8:0] sigmasum;         // sum with carry (bit 8) driving the output pins
+    reg    [7:0] pwmcount;
  
 
     initial
@@ -115,7 +113,7 @@ module fgenR3R(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pin
         phase = 0;
     end
 
-    waveform_tableR3R waveform (clocks[`N10CLK], 1'h0, phase[31:24], 8'h0, sine_val);
+    waveform_tablePWM waveform (clocks[`N10CLK], 1'h0, phase[31:24], 8'h0, sine_val);
 
     always @(posedge CLK_I)
     begin
@@ -153,7 +151,8 @@ module fgenR3R(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pin
     always @(posedge clocks[`N10CLK])
     begin
         phase <= phase + ((phase[31] == 0) ? risingoffset : fallingoffset);
-        pwmcount <= (pwmcount == 4'hb) ? 4'h0 : pwmcount + 1'h1;
+        sigmasum <= {1'b0,sigmasum[7:0]} + {1'b0,fgenout};
+        pwmcount <= pwmcount + 1'b1;
     end
 
     // Assign the output based on waveform type
@@ -163,12 +162,10 @@ module fgenR3R(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pin
         (osc_mode == `OSC_TRIANGLE) ? (phase[31] ? ~phase[30:23] : phase[30:23]) :
         (sine_val) ;
 
-    // Pins have a 2 bit pwm based on output.  The high two bits of pwmcount
-    // change at a 25 MHz rate.  Use a low pass filter on the output.
-    assign pins[0] = (pwmcount[3:2] < fgenout[1:0]) ? 1 : 0;
-    assign pins[1] = (pwmcount[3:2] < fgenout[3:2]) ? 1 : 0;
-    assign pins[2] = (pwmcount[3:2] < fgenout[5:4]) ? 1 : 0;
-    assign pins[3] = (pwmcount[3:2] < fgenout[7:6]) ? 1 : 0;
+    assign pins[0] = (fgenout > pwmcount) ? 1 : 0;
+    assign pins[1] = sigmasum[8];
+    assign pins[2] = phase[30];
+    assign pins[3] = phase[31];
 
     // Assign peripheral outputs
     assign myaddr = (STB_I) && (ADR_I[7:4] == 0);
@@ -183,7 +180,7 @@ endmodule
 
 // Waveform lookup table preloaded with sine.
 // This could be modified to be writable by the user.
-module waveform_tableR3R (clk, we, addr, din, dout);
+module waveform_tablePWM (clk, we, addr, din, dout);
     input clk;
     input we;
     input [7:0] addr;
