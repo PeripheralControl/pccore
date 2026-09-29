@@ -63,7 +63,7 @@
 `include "../../../peripherals/font437.v"
 
 module vgaterm(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,
-                vgaconn);
+                pins);
     input  CLK_I;            // system clock
     input  WE_I;             // direction of this transfer. Read=0; Write=1
     input  TGA_I;            // ==1 if reg access, ==0 if poll
@@ -74,7 +74,7 @@ module vgaterm(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,
     input  [7:0] DAT_I;      // Data INto the peripheral;
     output [7:0] DAT_O;      // Data OUTput from the peripheral, = DAT_I if not us.
     input  [`MXCLK:0] clocks; // Array of clock pulses from 10ns to 1 second
-    output [7:0] vgaconn;    // pins out to the VGA connector
+    output [7:0] pins;    // pins out to the VGA connector
 
     wire m100clk =  clocks[`M100CLK];    // utility 100.0 millisecond pulse
     wire m10clk  =  clocks[`M10CLK];     // utility 10.00 millisecond pulse
@@ -151,7 +151,7 @@ module vgaterm(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,
                  (showcursor && blinkcount[2]) ? 2'h0 :
                  ((frow == 4'd10) && (rddata[8])) ? rddata[11:10] :
                  (bits[fcol]) ? rddata[11:10] : rddata[17:16];
-    assign vgaconn = {blue[0], green[0], red[0], blue[1], green[1], red[1], vsync, hsync};
+    assign pins = {blue[0], green[0], red[0], blue[1], green[1], red[1], vsync, hsync};
 
 
     // Data to and from the display buffer is bg color (6), fg color (6), 
