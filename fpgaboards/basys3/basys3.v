@@ -111,7 +111,7 @@ module basys3(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDI
     // Copy pin values on ports C and D to the LEDs.  
     always @(posedge clocks[`U10CLK])
     begin
-        ledreg <= PCPIN[31:16];
+        ledreg <= PCPIN[15:0];
     end 
 
 
@@ -158,9 +158,13 @@ module basys3(CLK_O,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDI
     assign myaddr = (STB_I) && (ADR_I[7] == 0);
     assign DAT_O = (~myaddr) ? DAT_I : 
                     (~TGA_I & data_ready) ? 8'h03 :   // send up three bytes if data available
-                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[1:0] == 2'h0)) ? swreg1[7:0] :
-                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[1:0] == 2'h1)) ? swreg1[15:8] :
-                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[1:0] == 2'h2)) ? {3'h0,swreg1[20:16]} :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h0)) ? swreg1[7:0] :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h1)) ? swreg1[15:8] :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h2)) ? {3'h0,swreg1[20:16]} :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h4)) ? segs[0] :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h5)) ? segs[1] :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h6)) ? segs[2] :
+                     (TGA_I && (ADR_I[6] == 0) && (ADR_I[2:0] == 3'h7)) ? segs[3] :
                      (TGA_I && (ADR_I[6] == 1) && (ADR_I[0] == 0)) ? perid[15:8] :
                      (TGA_I && (ADR_I[6] == 1) && (ADR_I[0] == 1)) ? perid[7:0] :
                      8'h00;
