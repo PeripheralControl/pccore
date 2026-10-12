@@ -169,3 +169,11 @@ module pccore(BRDIO, PCPIN);
     assign bi0u100clk = bc0clocks[`U100CLK];
     assign ADR_O = bi0addr[7:0];
 
+    // Addressing and peripheral selection.  cs_io is needed to distinguish between memory
+    // and peripherals in memory mapped io.  No memory here so we set to 1.
+    wire   [4:0] slotid;
+    assign slotid = { 1'b0, bi0addr[11:8] };
+    wire cs_io;
+    assign cs_io = 1'b1;
+   
+
