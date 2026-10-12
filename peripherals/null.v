@@ -35,7 +35,7 @@
 // NOTES:
 //
 /////////////////////////////////////////////////////////////////////////
-module null(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
+module null(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks);
     input  CLK_I;            // system clock
     input  WE_I;             // direction of this transfer. Read=0; Write=1
     input  TGA_I;            // ==1 if reg access, ==0 if poll
@@ -46,7 +46,6 @@ module null(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,pins);
     input  [7:0] DAT_I;      // Data INto the peripheral;
     output [7:0] DAT_O;      // Data OUTput from the peripheral, = DAT_I if not us.
     input  [`MXCLK:0] clocks; // Array of clock pulses from 10ns to 1 second
-    inout  [3:0] pins;       // FPGA I/O pins
 
 
     // Loop in-to-out where appropriate
