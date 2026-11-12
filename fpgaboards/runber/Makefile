@@ -25,6 +25,7 @@
 # *********************************************************
 
 export PATH=/usr/bin:/usr/local/gowin/IDE/bin
+export QT_QPA_PLATFORM=minimal
 
 default: impl/pnr/pccore.fs
 
