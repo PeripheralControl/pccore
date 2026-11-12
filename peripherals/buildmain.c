@@ -220,7 +220,7 @@ void perilist(int addr, int startpin, int dirs, int numpins, char *peri)
         printf("        .ACK_O(p%02dACK_O),\n", addr);
         printf("        .DAT_I(p%02dDAT_I),\n", addr);
         printf("        .DAT_O(p%02dDAT_O),\n", addr);
-        printf("        .clocks(bc0clocks));\n");
+        printf("        .clocks(bc0clocks))\n");
         return;
     }
 
