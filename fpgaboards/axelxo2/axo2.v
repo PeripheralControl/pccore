@@ -45,7 +45,7 @@
 //  Reg 64: Table of sixteen 16-bit peripherals ID numbers
 //
 /////////////////////////////////////////////////////////////////////////
-module axo2(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDIO,PCPIN);
+module fpga_board(CLK_I,WE_I,TGA_I,STB_I,ADR_I,STALL_O,ACK_O,DAT_I,DAT_O,clocks,BRDIO,PCPIN);
     output CLK_I;            // system clock
     input  WE_I;             // direction of this transfer. Read=0; Write=1
     input  TGA_I;            // ==1 if reg access, ==0 if poll
